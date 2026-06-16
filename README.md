@@ -27,11 +27,8 @@ You can launch a modern, responsive single-page browser dashboard with real-time
    ```
 2. Open your browser and navigate to `http://localhost:8000`.
 
-### Dashboard Mockup (Concept)
-![Market Wave Surface Mockup](dashboard_mockup.png)
-
-### Live Application Screenshot
-![Market Wave Surface Live Screenshot](dashboard.png)
+### Dashboard Preview
+![Market Wave Surface Dashboard](dashboard.png)
 
 ## Relevant Wikipedia Links
 - [Drawdown (economics)](https://en.wikipedia.org/wiki/Drawdown_(economics))
