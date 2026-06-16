@@ -19,6 +19,16 @@ This project provides a clean, interactive dashboard for analyzing the downside 
    ```
    python portfolio_drawdown_dashboard.py
    ```
+## Web Dashboard (Interactive View)
+You can launch a modern, responsive single-page browser dashboard with real-time parameter tuning:
+1. Run a local web server:
+   ```bash
+   python3 -m http.server 8000
+   ```
+2. Open your browser and navigate to `http://localhost:8000`.
+
+### Dashboard Preview
+![Market Wave Surface Dashboard](dashboard.png)
 
 ## Relevant Wikipedia Links
 - [Drawdown (economics)](https://en.wikipedia.org/wiki/Drawdown_(economics))
@@ -26,4 +36,5 @@ This project provides a clean, interactive dashboard for analyzing the downside 
 - [Cumulative Return](https://en.wikipedia.org/wiki/Total_return)
 - [Financial Risk](https://en.wikipedia.org/wiki/Financial_risk)
 - [Portfolio (finance)](https://en.wikipedia.org/wiki/Portfolio_(finance))
+
 
