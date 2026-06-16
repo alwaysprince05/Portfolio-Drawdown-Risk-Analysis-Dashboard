@@ -3,100 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Portfolio Drawdown and Risk Analysis Dashboard - An interactive financial tool to analyze downside risk and rolling maximums.">
-    <title>Portfolio Drawdown & Risk Analysis Dashboard</title>
+    <meta name="description" content="Market Wave Surface - Premium interactive portfolio risk and drawdown analysis dashboard. Fits perfectly on one screen.">
+    <title>Market Wave Surface - Risk Dashboard</title>
     <link rel="stylesheet" href="styles.css">
     <!-- ApexCharts CDN -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 </head>
 <body>
     <header>
-        <h1>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #6366f1;">
-                <line x1="18" y1="20" x2="18" y2="10"></line>
-                <line x1="12" y1="20" x2="12" y2="4"></line>
-                <line x1="6" y1="20" x2="6" y2="14"></line>
+        <div class="logo-area">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="glow-icon">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
             </svg>
-            Market Wave Surface
-            <span class="badge">v1.0.0</span>
-        </h1>
-        <div style="font-size: 0.9rem; color: var(--text-secondary);">
-            Developer: <strong>alwaysprince05</strong>
+            <h1>Market Wave Surface</h1>
+            <span class="badge">PRO</span>
+        </div>
+        <div class="header-meta">
+            <span>Developer: <strong>alwaysprince05</strong></span>
         </div>
     </header>
 
     <main class="dashboard-grid">
-        <!-- Control Panel Card -->
+        <!-- Control Panel Card (Sidebar) -->
         <section class="card control-panel">
             <h2>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="4" y1="21" x2="4" y2="14"></line>
+                    <line x1="4" y1="10" x2="4" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12" y2="3"></line>
+                    <line x1="20" y1="21" x2="20" y2="16"></line>
+                    <line x1="20" y1="12" x2="20" y2="3"></line>
+                    <line x1="1" y1="14" x2="7" y2="14"></line>
+                    <line x1="9" y1="8" x2="15" y2="8"></line>
+                    <line x1="17" y1="16" x2="23" y2="16"></line>
                 </svg>
-                Simulation Settings
+                Parameters
             </h2>
             <form id="simulation-form" onsubmit="event.preventDefault();">
                 <div class="form-group">
-                    <label for="input-n">Number of Days (n)</label>
-                    <input type="number" id="input-n" value="500" min="50" max="2000" step="50" required>
+                    <div class="label-val-row">
+                        <label for="input-n">Simulation Days</label>
+                        <span class="value-display" id="val-n-disp">500</span>
+                    </div>
+                    <input type="range" id="input-n" min="100" max="1000" step="50" value="500">
                 </div>
+                
                 <div class="form-group">
-                    <label for="input-drift">Expected Return (Drift %/day)</label>
-                    <input type="number" id="input-drift" value="0.05" min="-1.0" max="1.0" step="0.01" required>
+                    <div class="label-val-row">
+                        <label for="input-drift">Expected Return (Drift)</label>
+                        <span class="value-display" id="val-drift-disp">0.05%</span>
+                    </div>
+                    <input type="range" id="input-drift" min="-0.50" max="0.50" step="0.01" value="0.05">
                 </div>
+                
                 <div class="form-group">
-                    <label for="input-scale">Volatility (Scale %/day)</label>
-                    <input type="number" id="input-scale" value="1.00" min="0.1" max="10.0" step="0.05" required>
+                    <div class="label-val-row">
+                        <label for="input-scale">Daily Volatility</label>
+                        <span class="value-display" id="val-scale-disp">1.00%</span>
+                    </div>
+                    <input type="range" id="input-scale" min="0.10" max="4.00" step="0.05" value="1.00">
                 </div>
+                
                 <div class="form-group">
-                    <label for="input-sigma">Smoothing Sigma (Gaussian)</label>
-                    <input type="number" id="input-sigma" value="3" min="0" max="15" step="1" required>
+                    <div class="label-val-row">
+                        <label for="input-sigma">Smoothing Factor (Sigma)</label>
+                        <span class="value-display" id="val-sigma-disp">3</span>
+                    </div>
+                    <input type="range" id="input-sigma" min="0" max="12" step="1" value="3">
                 </div>
+                
                 <div class="form-group">
-                    <label for="input-seed">Random Seed</label>
-                    <input type="number" id="input-seed" value="42" min="1" max="999999" required>
+                    <label for="input-seed" style="margin-bottom: 0.35rem;">Random Seed</label>
+                    <div class="seed-input-container">
+                        <input type="number" id="input-seed" value="42" min="1" max="999999">
+                        <button type="button" class="btn-icon" id="btn-shuffle" title="Randomize Seed">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="16 3 21 3 21 8"></polyline>
+                                <line x1="4" y1="20" x2="21" y2="3"></line>
+                                <polyline points="21 16 21 21 16 21"></polyline>
+                                <line x1="15" y1="15" x2="21" y2="21"></line>
+                                <line x1="4" y1="4" x2="9" y2="9"></line>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-                <button type="submit" class="btn" id="btn-generate">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
-                    </svg>
-                    Re-Simulate
-                </button>
             </form>
+            <div class="sidebar-footer">
+                Interactive sliders auto-calculate in real time.
+            </div>
         </section>
 
-        <!-- Charts & Statistics Panel -->
-        <section style="display: flex; flex-direction: column; gap: 2rem; width: 100%;">
-            <!-- Stats Summary -->
+        <!-- Right Content Area (KPIs & Charts) -->
+        <section class="content-panel">
+            <!-- KPI Cards -->
             <div class="stats-grid">
-                <div class="stat-card">
+                <div class="stat-card accent-cyan">
                     <div class="stat-label">Initial Value</div>
                     <div class="stat-value" id="val-initial">$100.00</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card accent-indigo">
                     <div class="stat-label">Final Value</div>
                     <div class="stat-value" id="val-final">-</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card accent-emerald" id="card-return">
                     <div class="stat-label">Total Return</div>
                     <div class="stat-value" id="val-return">-</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-label" style="color: #fda4af;">Max Drawdown</div>
+                <div class="stat-card accent-rose">
+                    <div class="stat-label" style="color: #fda4af;">Maximum Drawdown</div>
                     <div class="stat-value negative" id="val-max-dd">-</div>
                 </div>
             </div>
 
-            <!-- Charts Container -->
-            <div class="card charts-container">
+            <!-- Charts Card -->
+            <div class="card charts-card">
                 <!-- Top Chart: Price and Rolling Max -->
                 <div class="chart-wrapper">
-                    <div class="chart-title">
-                        Portfolio Value & Rolling Peak
+                    <div class="chart-header">
+                        <div class="chart-title-box">
+                            <h3>Portfolio Value & Peak</h3>
+                            <p>Smooth cumulative equity curve against rolling peak value</p>
+                        </div>
                         <div class="custom-legend">
                             <div class="legend-item">
                                 <div class="legend-color legend-price"></div>
-                                <span>Smooth Price</span>
+                                <span>Portfolio Value</span>
                             </div>
                             <div class="legend-item">
                                 <div class="legend-color legend-max"></div>
@@ -104,13 +136,16 @@
                             </div>
                         </div>
                     </div>
-                    <div id="price-chart"></div>
+                    <div id="price-chart" class="chart-container"></div>
                 </div>
 
                 <!-- Bottom Chart: Drawdown -->
                 <div class="chart-wrapper">
-                    <div class="chart-title">
-                        Drawdown Analysis (Negative %)
+                    <div class="chart-header">
+                        <div class="chart-title-box">
+                            <h3>Portfolio Drawdowns</h3>
+                            <p>Peak-to-trough decline over time (negative % representation)</p>
+                        </div>
                         <div class="custom-legend">
                             <div class="legend-item">
                                 <div class="legend-color legend-drawdown"></div>
@@ -118,7 +153,7 @@
                             </div>
                         </div>
                     </div>
-                    <div id="drawdown-chart"></div>
+                    <div id="drawdown-chart" class="chart-container"></div>
                 </div>
             </div>
         </section>

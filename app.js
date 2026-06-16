@@ -58,19 +58,27 @@ function gaussianFilter1d(arr, sigma) {
     return result;
 }
 
-// Global chart variables to allow updating
+// Global chart variables to allow smooth updates
 let priceChartObj = null;
 let drawdownChartObj = null;
 
 function runSimulation() {
     // 1. Get input values
     const n = parseInt(document.getElementById('input-n').value);
-    const drift = parseFloat(document.getElementById('input-drift').value) / 100; // convert percentage to decimal
-    const scale = parseFloat(document.getElementById('input-scale').value) / 100; // convert percentage to decimal
+    const driftRaw = parseFloat(document.getElementById('input-drift').value);
+    const scaleRaw = parseFloat(document.getElementById('input-scale').value);
     const sigma = parseFloat(document.getElementById('input-sigma').value);
     const seed = parseInt(document.getElementById('input-seed').value);
     
+    // Update Slider Displays
+    document.getElementById('val-n-disp').textContent = n;
+    document.getElementById('val-drift-disp').textContent = `${driftRaw >= 0 ? '+' : ''}${driftRaw.toFixed(2)}%`;
+    document.getElementById('val-scale-disp').textContent = `${scaleRaw.toFixed(2)}%`;
+    document.getElementById('val-sigma-disp').textContent = sigma;
+    
     // Setup RNG
+    const drift = driftRaw / 100;
+    const scale = scaleRaw / 100;
     const randFunc = mulberry32(seed);
     
     // 2. Simulate returns and price series
@@ -85,8 +93,7 @@ function runSimulation() {
     for (let i = 0; i < n; i++) {
         const d = new Date(startDate);
         d.setDate(startDate.getDate() + i);
-        // Format as YYYY-MM-DD
-        dates.push(d.toISOString().split('T')[0]);
+        dates.push(d.getTime()); // Unix timestamp for datetime x-axis
     }
     
     // Compute prices: price = 100 * exp(cumsum(returns))
@@ -123,11 +130,7 @@ function runSimulation() {
     const smoothRollingMax = gaussianFilter1d(rollingMax, sigma);
     const smoothDrawdowns = gaussianFilter1d(drawdowns, sigma);
     
-    // Find max drawdown point based on unsmoothed or smoothed data?
-    // The Python script does:
-    // max_dd_idx = portfolio['Drawdown'].idxmin()
-    // max_dd_val = portfolio['Drawdown'].min()
-    // Let's use smoothed drawdown to align the point correctly with visual curve
+    // Find max drawdown point
     let maxDdVal = 0;
     let maxDdIdx = 0;
     for (let i = 0; i < n; i++) {
@@ -144,179 +147,217 @@ function runSimulation() {
     document.getElementById('val-final').textContent = `$${finalPrice.toFixed(2)}`;
     
     const returnEl = document.getElementById('val-return');
-    returnEl.textContent = `${(totalReturn * 100).toFixed(2)}%`;
+    returnEl.textContent = `${totalReturn >= 0 ? '+' : ''}${(totalReturn * 100).toFixed(2)}%`;
+    
+    const cardReturn = document.getElementById('card-return');
+    cardReturn.className = `stat-card ${totalReturn >= 0 ? 'accent-emerald' : 'accent-rose'}`;
     returnEl.className = `stat-value ${totalReturn >= 0 ? 'positive' : 'negative'}`;
     
     const maxDdEl = document.getElementById('val-max-dd');
     maxDdEl.textContent = `${(maxDdVal * 100).toFixed(2)}%`;
     
-    // 6. Setup ApexCharts options
+    // 6. Chart Configurations
     const sharedChartOptions = {
         chart: {
-            group: 'portfolio-risk',
-            height: 250,
-            toolbar: { show: true },
+            group: 'portfolio-risk-metrics',
+            height: '100%',
+            toolbar: { show: false },
             zoom: { enabled: true },
-            animations: { enabled: true }
+            animations: {
+                enabled: true,
+                easing: 'easeout',
+                speed: 300,
+                animateGradually: { enabled: false }
+            }
         },
         xaxis: {
             type: 'datetime',
-            categories: dates,
             labels: {
-                style: { colors: '#94a3b8' }
+                style: { colors: '#64748b', fontSize: '10px', fontFamily: 'Plus Jakarta Sans' },
+                datetimeUTC: false
+            },
+            axisBorder: { show: false },
+            axisTicks: { show: false }
+        },
+        yaxis: {
+            labels: {
+                style: { colors: '#64748b', fontSize: '10px', fontFamily: 'Plus Jakarta Sans' }
             }
         },
         grid: {
-            borderColor: 'rgba(255, 255, 255, 0.05)',
-            strokeDashArray: 4
+            borderColor: 'rgba(255, 255, 255, 0.03)',
+            strokeDashArray: 2
         },
         tooltip: {
             theme: 'dark',
             x: { format: 'dd MMM yyyy' }
-        }
+        },
+        legend: { show: false } // Custom legend is used in HTML
     };
     
-    // Price Chart options
-    const priceOptions = {
-        ...sharedChartOptions,
-        chart: {
-            ...sharedChartOptions.chart,
-            id: 'chart-price',
-            type: 'line'
+    const priceSeries = [
+        {
+            name: 'Portfolio Value',
+            data: smoothPrices.map((val, idx) => [dates[idx], parseFloat(val.toFixed(2))])
         },
-        series: [
-            {
-                name: 'Smooth Price',
-                data: smoothPrices.map(val => parseFloat(val.toFixed(2)))
+        {
+            name: 'Rolling Max',
+            data: smoothRollingMax.map((val, idx) => [dates[idx], parseFloat(val.toFixed(2))])
+        }
+    ];
+    
+    const drawdownSeries = [
+        {
+            name: 'Drawdown',
+            data: smoothDrawdowns.map((val, idx) => [dates[idx], parseFloat((val * 100).toFixed(2))])
+        }
+    ];
+    
+    const priceAnnotations = {
+        points: [{
+            x: maxDdDate,
+            y: parseFloat(maxDdPrice.toFixed(2)),
+            marker: {
+                size: 6,
+                fillColor: '#f43f5e',
+                strokeColor: '#ffffff',
+                strokeWidth: 2,
+                radius: 4
             },
-            {
-                name: 'Rolling Max',
-                data: smoothRollingMax.map(val => parseFloat(val.toFixed(2)))
-            }
-        ],
-        colors: ['#3b82f6', '#f59e0b'],
-        stroke: {
-            width: [3, 2],
-            dashArray: [0, 4]
-        },
-        yaxis: {
-            labels: {
-                formatter: val => `$${val.toFixed(2)}`,
-                style: { colors: '#94a3b8' }
-            },
-            title: {
-                text: 'Portfolio Value',
-                style: { color: '#94a3b8', fontWeight: 500 }
-            }
-        },
-        annotations: {
-            points: [{
-                x: new Date(maxDdDate).getTime(),
-                y: parseFloat(maxDdPrice.toFixed(2)),
-                marker: {
-                    size: 8,
-                    fillColor: '#ef4444',
-                    strokeColor: '#ffffff',
-                    radius: 2,
-                    cssClass: 'apexcharts-custom-class'
+            label: {
+                borderColor: '#f43f5e',
+                style: {
+                    color: '#fff',
+                    background: '#f43f5e',
+                    fontSize: '9px',
+                    fontWeight: 600,
+                    padding: { left: 4, right: 4, top: 2, bottom: 2 }
                 },
-                label: {
-                    borderColor: '#ef4444',
-                    offsetY: 0,
-                    style: {
-                        color: '#fff',
-                        background: '#ef4444',
-                        fontWeight: 600
-                    },
-                    text: 'Max DD Point'
-                }
-            }]
-        }
+                text: 'Max Drawdown'
+            }
+        }]
     };
     
-    // Drawdown Chart options
-    const drawdownOptions = {
-        ...sharedChartOptions,
-        chart: {
-            ...sharedChartOptions.chart,
-            id: 'chart-drawdown',
-            type: 'area'
-        },
-        series: [
-            {
-                name: 'Drawdown',
-                data: smoothDrawdowns.map(val => parseFloat((val * 100).toFixed(2)))
-            }
-        ],
-        colors: ['#ef4444'],
-        fill: {
-            type: 'gradient',
-            gradient: {
-                shadeIntensity: 1,
-                opacityFrom: 0.4,
-                opacityTo: 0.1,
-                stops: [0, 90, 100]
-            }
-        },
-        stroke: {
-            width: 2
-        },
-        yaxis: {
-            labels: {
-                formatter: val => `${val.toFixed(2)}%`,
-                style: { colors: '#94a3b8' }
+    const drawdownAnnotations = {
+        points: [{
+            x: maxDdDate,
+            y: parseFloat((maxDdVal * 100).toFixed(2)),
+            marker: {
+                size: 5,
+                fillColor: '#000000',
+                strokeColor: '#f43f5e',
+                strokeWidth: 2,
+                radius: 4
             },
-            title: {
-                text: 'Drawdown %',
-                style: { color: '#94a3b8', fontWeight: 500 }
-            }
-        },
-        annotations: {
-            points: [{
-                x: new Date(maxDdDate).getTime(),
-                y: parseFloat((maxDdVal * 100).toFixed(2)),
-                marker: {
-                    size: 6,
-                    fillColor: '#000000',
-                    strokeColor: '#ef4444',
-                    radius: 2
+            label: {
+                borderColor: '#f43f5e',
+                offsetY: -8,
+                style: {
+                    color: '#fff',
+                    background: '#f43f5e',
+                    fontSize: '9px',
+                    fontWeight: 600,
+                    padding: { left: 4, right: 4, top: 2, bottom: 2 }
                 },
-                label: {
-                    borderColor: '#ef4444',
-                    offsetY: -10,
-                    style: {
-                        color: '#fff',
-                        background: '#ef4444',
-                        fontWeight: 600
-                    },
-                    text: `Max Drawdown: ${(maxDdVal * 100).toFixed(2)}%`
-                }
-            }]
-        }
+                text: `Peak decline: ${(maxDdVal * 100).toFixed(2)}%`
+            }
+        }]
     };
-    
-    // Destroy existing chart instances before recreating
-    if (priceChartObj) {
-        priceChartObj.destroy();
-    }
-    if (drawdownChartObj) {
-        drawdownChartObj.destroy();
+
+    // Render or update charts
+    if (!priceChartObj) {
+        // First initialization
+        const priceOptions = {
+            ...sharedChartOptions,
+            chart: {
+                ...sharedChartOptions.chart,
+                id: 'chart-price',
+                type: 'line'
+            },
+            series: priceSeries,
+            colors: ['#06b6d4', '#f59e0b'],
+            stroke: {
+                width: [2.5, 1.5],
+                dashArray: [0, 4]
+            },
+            yaxis: {
+                ...sharedChartOptions.yaxis,
+                labels: {
+                    ...sharedChartOptions.yaxis.labels,
+                    formatter: val => `$${val.toFixed(2)}`
+                }
+            },
+            annotations: priceAnnotations
+        };
+        priceChartObj = new ApexCharts(document.querySelector("#price-chart"), priceOptions);
+        priceChartObj.render();
+    } else {
+        // Smooth update
+        priceChartObj.updateOptions({
+            annotations: priceAnnotations
+        }, false, false);
+        priceChartObj.updateSeries(priceSeries);
     }
     
-    // Render charts
-    priceChartObj = new ApexCharts(document.querySelector("#price-chart"), priceOptions);
-    priceChartObj.render();
-    
-    drawdownChartObj = new ApexCharts(document.querySelector("#drawdown-chart"), drawdownOptions);
-    drawdownChartObj.render();
+    if (!drawdownChartObj) {
+        // First initialization
+        const drawdownOptions = {
+            ...sharedChartOptions,
+            chart: {
+                ...sharedChartOptions.chart,
+                id: 'chart-drawdown',
+                type: 'area'
+            },
+            series: drawdownSeries,
+            colors: ['#f43f5e'],
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.25,
+                    opacityTo: 0.02,
+                    stops: [0, 90, 100]
+                }
+            },
+            stroke: { width: 1.5 },
+            yaxis: {
+                ...sharedChartOptions.yaxis,
+                labels: {
+                    ...sharedChartOptions.yaxis.labels,
+                    formatter: val => `${val.toFixed(2)}%`
+                }
+            },
+            annotations: drawdownAnnotations
+        };
+        drawdownChartObj = new ApexCharts(document.querySelector("#drawdown-chart"), drawdownOptions);
+        drawdownChartObj.render();
+    } else {
+        // Smooth update
+        drawdownChartObj.updateOptions({
+            annotations: drawdownAnnotations
+        }, false, false);
+        drawdownChartObj.updateSeries(drawdownSeries);
+    }
 }
 
-// Initial Run and Form hook
+// Initial Run and input bindings
 document.addEventListener('DOMContentLoaded', () => {
+    // Generate simulation on load
     runSimulation();
     
-    document.getElementById('simulation-form').addEventListener('submit', (e) => {
-        e.preventDefault();
+    // Bind all ranges to simulate instantly on drag
+    const sliders = ['input-n', 'input-drift', 'input-scale', 'input-sigma'];
+    sliders.forEach(id => {
+        document.getElementById(id).addEventListener('input', runSimulation);
+    });
+    
+    // Bind number seed changes
+    document.getElementById('input-seed').addEventListener('input', runSimulation);
+    
+    // Shuffle seed button
+    document.getElementById('btn-shuffle').addEventListener('click', () => {
+        const randomSeed = Math.floor(Math.random() * 9999) + 1;
+        document.getElementById('input-seed').value = randomSeed;
         runSimulation();
     });
 });
