@@ -188,6 +188,9 @@ function runSimulation() {
             borderColor: 'rgba(255, 255, 255, 0.03)',
             strokeDashArray: 2
         },
+        dataLabels: {
+            enabled: false
+        },
         tooltip: {
             theme: 'dark',
             x: { format: 'dd MMM yyyy' }
